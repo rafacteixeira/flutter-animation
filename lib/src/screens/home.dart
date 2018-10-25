@@ -6,7 +6,6 @@ class Home extends StatefulWidget {
 }
 
 class HomeState extends State<Home> with TickerProviderStateMixin {
-
   Animation<double> catAnimation;
   AnimationController catController;
 
@@ -14,8 +13,15 @@ class HomeState extends State<Home> with TickerProviderStateMixin {
     super.initState();
 
     catController = AnimationController(
-        duration: Duration(seconds: 2),
-        vsync: this,
+      duration: Duration(milliseconds: 200),
+      vsync: this,
+    );
+
+    catAnimation = Tween(begin: -35.0, end: -80.0).animate(
+      CurvedAnimation(
+        parent: catController,
+        curve: Curves.easeIn,
+      ),
     );
   }
 
@@ -24,12 +30,49 @@ class HomeState extends State<Home> with TickerProviderStateMixin {
       appBar: AppBar(
         title: Text("Animation"),
       ),
-      body: buildAnimation(),
+      body: GestureDetector(
+        child: Center(
+          child: Stack(
+            children: <Widget>[
+              buildCatAnimation(),
+              buildBox(),
+            ],
+            overflow: Overflow.visible,
+          ),
+        ),
+        onTap: onTap,
+      ),
     );
   }
 
+  Widget buildCatAnimation() {
+    return AnimatedBuilder(
+      animation: catAnimation,
+      builder: (BuildContext context, Widget child) {
+        return Positioned(
+          child: child,
+          top: catAnimation.value,
+          right: 0.0,
+          left: 0.0,
+        );
+      },
+      child: Cat(),
+    );
+  }
 
-  Widget buildAnimation() {
-    return Cat();
+  onTap() {
+    if (AnimationStatus.completed == catController.status) {
+      catController.reverse();
+    } else if (AnimationStatus.dismissed == catController.status) {
+      catController.forward();
+    }
+  }
+
+  Widget buildBox() {
+    return Container(
+      height: 200.0,
+      width: 200.0,
+      color: Colors.brown,
+    );
   }
 }
