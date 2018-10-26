@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/cat.dart';
+import 'dart:math';
 
 class Home extends StatefulWidget {
   HomeState createState() => HomeState();
@@ -9,11 +10,14 @@ class HomeState extends State<Home> with TickerProviderStateMixin {
   Animation<double> catAnimation;
   AnimationController catController;
 
+  Animation<double> boxAnimation;
+  AnimationController boxController;
+
   initState() {
     super.initState();
 
     catController = AnimationController(
-      duration: Duration(milliseconds: 200),
+      duration: Duration(milliseconds: 400),
       vsync: this,
     );
 
@@ -23,6 +27,27 @@ class HomeState extends State<Home> with TickerProviderStateMixin {
         curve: Curves.easeIn,
       ),
     );
+
+    boxController = AnimationController(
+      duration: Duration(milliseconds: 100),
+      vsync: this,
+    );
+
+    boxAnimation = Tween(begin: pi * 0.6, end: pi * 0.65).animate(
+      CurvedAnimation(
+        parent: boxController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    boxController.addStatusListener((status) {
+      if (status == AnimationStatus.completed && catController.isAnimating) {
+        boxController.reverse();
+      } else if (status == AnimationStatus.dismissed &&
+          catController.isAnimating) {
+        boxController.forward();
+      }
+    });
   }
 
   Widget build(BuildContext context) {
@@ -36,6 +61,8 @@ class HomeState extends State<Home> with TickerProviderStateMixin {
             children: <Widget>[
               buildCatAnimation(),
               buildBox(),
+              buildLeftFlap(),
+              buildRightFlap(),
             ],
             overflow: Overflow.visible,
           ),
@@ -63,8 +90,15 @@ class HomeState extends State<Home> with TickerProviderStateMixin {
   onTap() {
     if (AnimationStatus.completed == catController.status) {
       catController.reverse();
+      boxController.stop();
     } else if (AnimationStatus.dismissed == catController.status) {
       catController.forward();
+    }
+
+    if (boxController.status == AnimationStatus.dismissed) {
+      boxController.forward();
+    } else if (boxController.status == AnimationStatus.completed) {
+      boxController.reverse();
     }
   }
 
@@ -73,6 +107,50 @@ class HomeState extends State<Home> with TickerProviderStateMixin {
       height: 200.0,
       width: 200.0,
       color: Colors.brown,
+    );
+  }
+
+  Widget buildLeftFlap() {
+    return Positioned(
+      left: 3.0,
+      top: 2.0,
+      child: AnimatedBuilder(
+        animation: boxAnimation,
+        child: Container(
+          color: Colors.brown,
+          height: 10.0,
+          width: 125.0,
+        ),
+        builder: (context, child) {
+          return Transform.rotate(
+            child: child,
+            alignment: Alignment.topLeft,
+            angle: boxAnimation.value,
+          );
+        },
+      ),
+    );
+  }
+
+  Widget buildRightFlap() {
+    return Positioned(
+      right: 3.0,
+      top: 2.0,
+      child: AnimatedBuilder(
+        animation: boxAnimation,
+        child: Container(
+          color: Colors.brown,
+          height: 10.0,
+          width: 125.0,
+        ),
+        builder: (context, child) {
+          return Transform.rotate(
+            child: child,
+            alignment: Alignment.topRight,
+            angle: boxAnimation.value * -1,
+          );
+        },
+      ),
     );
   }
 }
